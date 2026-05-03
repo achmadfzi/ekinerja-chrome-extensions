@@ -1,4 +1,4 @@
-# eKinerja Excel Importer
+# eKinerja Chrome Extension
 
 Chrome Extension untuk mengimport data progress harian dari file Excel ke **eKinerja BKN** (kinerja.bkn.go.id) secara otomatis.
 
