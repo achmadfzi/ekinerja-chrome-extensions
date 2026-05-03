@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eKinerja Excel Importer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-brand">
+        <img src="icons/icon-48.png" alt="Logo" class="header-logo">
+        <div>
+          <h1 class="header-title">eKinerja Importer</h1>
+          <p class="header-subtitle">Import Excel → Progress Harian</p>
+        </div>
+      </div>
+      <div class="status-badge" id="statusBadge">
+        <span class="status-dot"></span>
+        <span class="status-text">Siap</span>
+      </div>
+    </header>
+
+    <!-- Connection Check -->
+    <div class="connection-bar" id="connectionBar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <span>Terhubung ke eKinerja</span>
+    </div>
+
+    <!-- Step 1: Upload -->
+    <section class="card" id="uploadSection">
+      <div class="card-header">
+        <div class="step-number">1</div>
+        <h2 class="card-title">Upload File Excel</h2>
+      </div>
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
+        <div class="upload-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <p class="upload-text">Klik atau drag & drop file Excel</p>
+        <p class="upload-hint">.xlsx, .xls, atau .csv</p>
+      </div>
+      <div class="file-info" id="fileInfo" style="display:none">
+        <div class="file-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <div class="file-details">
+          <span class="file-name" id="fileName"></span>
+          <span class="file-meta" id="fileMeta"></span>
+        </div>
+        <button class="btn-icon" id="removeFile" title="Hapus file">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <button class="btn btn-outline btn-sm" id="downloadTemplate">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download Template Excel
+      </button>
+    </section>
+
+    <!-- Step 2: Preview -->
+    <section class="card" id="previewSection" style="display:none">
+      <div class="card-header">
+        <div class="step-number">2</div>
+        <h2 class="card-title">Preview Data</h2>
+        <span class="badge" id="rowCount">0 baris</span>
+      </div>
+      <div class="table-container">
+        <table class="preview-table" id="previewTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Rencana Aksi</th>
+              <th>Tanggal</th>
+              <th>Mulai</th>
+              <th>Selesai</th>
+              <th>Kegiatan</th>
+              <th>Realisasi</th>
+              <th>Bukti</th>
+            </tr>
+          </thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Step 3: Import -->
+    <section class="card" id="importSection" style="display:none">
+      <div class="card-header">
+        <div class="step-number">3</div>
+        <h2 class="card-title">Import ke eKinerja</h2>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-group">
+        <label class="setting-label">
+          <span>Delay antar entry (detik)</span>
+          <input type="number" class="setting-input" id="delayInput" value="3" min="1" max="10">
+        </label>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-container" id="progressContainer" style="display:none">
+        <div class="progress-header">
+          <span class="progress-text" id="progressText">0 / 0</span>
+          <span class="progress-percent" id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div class="log-container" id="logContainer" style="display:none">
+        <div class="log-header">
+          <span>Activity Log</span>
+          <button class="btn-icon" id="clearLog" title="Bersihkan log">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+        <div class="log-entries" id="logEntries"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn btn-primary" id="startImport">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Mulai Import
+        </button>
+        <button class="btn btn-danger" id="stopImport" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="6" y="6" width="12" height="12"/>
+          </svg>
+          Stop
+        </button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>eKinerja Excel Importer v1.0 • Tidak berafiliasi dengan BKN</p>
+    </footer>
+  </div>
+
+  <script src="libs/xlsx.full.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
